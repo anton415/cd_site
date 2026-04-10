@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static ru.job4j.site.util.RequestResponseTools.getToken;
 
@@ -98,6 +99,14 @@ public class InterviewsController {
             var topicLiteDTOs = topicsService.getAllTopicLiteDTO();
             var topicsLiteMap = topicsService.liteDTTOSToMap(topicLiteDTOs);
             var statuses = StatusInterview.values();
+            Map<Integer, ProfileDTO> authors = interviewsPage.toList().stream()
+                    .map(InterviewDTO::getSubmitterId)
+                    .distinct()
+                    .map(profilesService::getProfileById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toMap(ProfileDTO::getId, Function.identity()));
+            model.addAttribute("authors", authors);
             model.addAttribute("authService", authService);
             model.addAttribute("topicsLiteMap", topicsLiteMap);
             model.addAttribute("interviewsPage", interviewsPage);

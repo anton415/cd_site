@@ -36,6 +36,7 @@ public class InterviewController {
     private final NotificationService notifications;
     private final FeedbackService feedbackService;
     private final ExamService examService;
+    private final ProfilesService profilesService;
 
     @GetMapping("/createForm")
     public String createForm(@ModelAttribute("topicId") int topicId,
@@ -121,6 +122,8 @@ public class InterviewController {
         boolean isUserDismissed = wisherService.isUserDismissed(interviewId, userInfo.getId(), wishers);
         var feedbacks = feedbackService.findByInterviewId(interview.getId());
         var feedbackMap = feedbackService.feedbackDTOSToMap(feedbacks);
+        var authorProfile = profilesService.getProfileById(interview.getSubmitterId()).orElse(new ProfileDTO());
+        model.addAttribute("authorProfile", authorProfile);
         model.addAttribute("authService", authService);
         model.addAttribute("interview", interview);
         model.addAttribute("isAuthor", isAuthor);
@@ -363,10 +366,12 @@ public class InterviewController {
             var isWisher = wisherService.isWisher(userInfoDTO.getId(), interview.getId(), wishers);
             var statisticMap = wisherService.getInterviewStatistic(wishers);
             var countWishers = wisherService.countWishers(wishers, interviewId);
+            var authorProfile = profilesService.getProfileById(interview.getSubmitterId()).orElse(new ProfileDTO());
             model.addAttribute("interview", interview);
             model.addAttribute("isWisher", isWisher);
             model.addAttribute("statisticMap", statisticMap);
             model.addAttribute("countWishers", countWishers);
+            model.addAttribute("authorProfile", authorProfile);
             RequestResponseTools.addAttrBreadcrumbs(model,
                     "Главная", "/index",
                     "Собеседования", "/interviews/",

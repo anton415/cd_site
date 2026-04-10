@@ -16,7 +16,7 @@
                         + '\'
                         + topicLiteDTO.name
                         + '. '
-                        + interview.author}">
+                        + authorProfile.username}">
         Собеседование на тему ИМЯ_КАТЕГОРИИ\ИМЯ_ТЕМУ. ИМЯ_АВТОРА</title>
 
     <!-- Required meta tags -->
@@ -150,7 +150,12 @@
                 <i class="far fa-clock"></i>
                 <span class="me-2" th:text="${#strings.substring(interview.createDate, 0, 10)}"></span>
                 <i class="far fa-user"></i>
-                <span class="me-2" th:text="${authService.findById(interview.submitterId).username}"></span>
+                <a class="me-2 text-decoration-none text-muted"
+                   th:if="${authorProfile.id != null}"
+                   th:href="@{|/profiles/${authorProfile.id}|}">
+                    <span th:text="${authorProfile.username}"></span>
+                </a>
+                <span class="me-2" th:if="${authorProfile.id == null}" th:text="${authorProfile.username}"></span>
                 <i class="fa fa-calendar-check"></i>
                 <span class="me-2"
                       th:text="${'Дата и время проведения собеседования: ' + interview.approximateDate}"></span>
@@ -181,7 +186,7 @@
                     <tbody>
                     <tr>
                         <td>
-                            <span th:text="${interview.author}"></span>
+                            <span th:text="${authorProfile.username}"></span>
                         </td>
                         <td>
                             <span th:if="${isAuthor or isUserDismissed}" th:text="${interview.contactBy}"></span>

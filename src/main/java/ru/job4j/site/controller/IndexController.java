@@ -8,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import ru.job4j.site.dto.CategoryDTO;
+import ru.job4j.site.dto.InterviewDTO;
+import ru.job4j.site.dto.ProfileDTO;
 import ru.job4j.site.dto.VacancyStatisticWithDates;
 import ru.job4j.site.service.*;
 import ru.job4j.site.util.RequestResponseTools;
@@ -16,6 +18,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static ru.job4j.site.util.RequestResponseTools.getToken;
 
@@ -26,6 +32,7 @@ public class IndexController {
     private final CategoriesService categoriesService;
     private final InterviewsService interviewsService;
     private final AuthService authService;
+    private final ProfilesService profilesService;
     private final NotificationService notifications;
     private final TopicsService topicsService;
     private final VacancyStatisticService vacancyStatisticService;
@@ -76,6 +83,13 @@ public class IndexController {
             i.setAdditional(StringEscapeUtils.unescapeHtml4(i.getAdditional()));
         });
         interviewsService.setCountWishers(newInterviewsDTO, getToken(req));
+        Map<Integer, ProfileDTO> authors = newInterviewsDTO.stream()
+                .map(InterviewDTO::getSubmitterId)
+                .distinct()
+                .map(profilesService::getProfileById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toMap(ProfileDTO::getId, Function.identity()));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         var vacancyStatisticDates = vacancyStatistic.getDates();
@@ -86,6 +100,7 @@ public class IndexController {
 
         model.addAttribute("topicsLiteMap", topicsLiteMap);
         model.addAttribute("new_interviews", newInterviewsDTO);
+        model.addAttribute("authors", authors);
         model.addAttribute("authService", authService);
         model.addAttribute("vacancyStatistic", vacancyStatistic.getStatisticList());
         model.addAttribute("vacancyStatisticLastUpdateDate", vacancyStatisticLastUpdateDate);

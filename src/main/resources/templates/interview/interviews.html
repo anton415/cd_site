@@ -442,8 +442,11 @@
                                 <span class="me-2"
                                       th:text="${#strings.substring(interview.createDate, 0, 10)}"></span>
                                 <i class="far fa-user"></i>
-                                <span class="me-2"
-                                      th:text="${authService.findById(interview.submitterId).username}"></span>
+                                <a class="me-2 text-decoration-none text-muted"
+                                   th:if="${authors.containsKey(interview.submitterId)}"
+                                   th:href="@{|/profiles/${authors.get(interview.submitterId).id}|}">
+                                    <span th:text="${authors.get(interview.submitterId).username}"></span>
+                                </a>
                                 <i class="fa fa-comments" aria-hidden="true"></i>
                                 <span>Откликов:</span>
                                 <span th:text="${interview.countWishers}"></span>

@@ -14,10 +14,12 @@ public class InterviewDTO {
     private int mode;
     private int statusId;
     private String statusInfo;
+    /**
+     * поле id автора собеседования (тот кто создал собеседование)
+     */
     private int submitterId;
     /**
      * поле выбранного автором wisher
-     * Arcady555
      */
     private int agreedWisherId;
     private String title;

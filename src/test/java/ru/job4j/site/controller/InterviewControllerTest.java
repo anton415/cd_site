@@ -50,6 +50,8 @@ public class InterviewControllerTest {
     @MockBean
     private FeedbackService feedbackService;
     @MockBean
+    private ProfilesService profilesService;
+    @MockBean
     private EurekaUriProvider uriProvider;
 
     @Test
@@ -74,7 +76,6 @@ public class InterviewControllerTest {
                         "/interview/" + interview.getId()));
         when(topicsService.getTopicLiteDTOById(topicLiteDTO.getId())).thenReturn(Optional.of(topicLiteDTO));
         when(authService.userInfo(token)).thenReturn(userInfo);
-        when(authService.findById(interview.getSubmitterId())).thenReturn(profileDTO);
         when(interviewService.getById(token, 1)).thenReturn(interview);
         when(interviewService.isAuthor(userInfo, interview)).thenReturn(false);
         when(wisherService.getAllWisherDtoByInterviewId(token, String.valueOf(interview.getId())))
@@ -82,6 +83,7 @@ public class InterviewControllerTest {
         when(wisherService.getInterviewStatistic(wishersDto)).thenReturn(new HashMap<>());
         when(wisherService.isWisher(userInfo.getId(), interview.getId(), wishersDto)).thenReturn(false);
         when(feedbackService.findByInterviewId(interview.getId())).thenReturn(Collections.emptyList());
+        when(profilesService.getProfileById(interview.getSubmitterId())).thenReturn(Optional.of(profileDTO));
         when(uriProvider.getUri(Mockito.anyString())).thenReturn("https://service");
         mockMvc.perform(get("/interview/{id}", interview.getId())
                         .sessionAttr("token", token))
@@ -97,6 +99,7 @@ public class InterviewControllerTest {
                 .andExpect(model().attribute("STATUS_IN_PROGRESS_ID", StatusInterview.IN_PROGRESS.getId()))
                 .andExpect(model().attribute("STATUS_IS_FEEDBACK_ID", StatusInterview.IS_FEEDBACK.getId()))
                 .andExpect(model().attribute("topicLiteDTO", topicLiteDTO))
+                .andExpect(model().attribute("authorProfile", profileDTO))
                 .andExpect(model().attribute("feedbackMap", Collections.emptyMap()))
                 .andExpect(view().name("interview/details"));
     }
@@ -370,11 +373,13 @@ public class InterviewControllerTest {
                 .thenReturn(wishers);
         when(wisherService.getInterviewStatistic(wishers)).thenReturn(interviewStatistics);
         when(authService.userInfo(token)).thenReturn(userInfo);
+        when(profilesService.getProfileById(interview.getSubmitterId())).thenReturn(Optional.of(new ProfileDTO()));
         when(uriProvider.getUri(Mockito.anyString())).thenReturn("https://service");
         mockMvc.perform(get(String.format("/interview/%d/participate", interviewId))
                         .sessionAttr("token", token)
                 )
                 .andDo(print()).andExpectAll(status().isOk(),
+                        model().attributeExists("authorProfile"),
                         model().attribute("breadcrumbs", List.of(
                                 new Breadcrumb("Главная", "/index"),
                                 new Breadcrumb("Собеседования", "/interviews/"),

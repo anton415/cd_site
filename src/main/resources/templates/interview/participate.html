@@ -45,12 +45,13 @@
                     <span th:insert="fragments/statusInterview::status"></span>
                     <i class="far fa-clock"></i>
                     <span th:text="${#strings.substring(interview.createDate, 0, 10)}"></span>
-                    <span th:each="user: ${users}">
-                                    <span th:if="${interview.submitterId == user.getId()}">
-                                        <i class="far fa-user"></i>
-                                        <span th:text="${user.getUsername()}"></span>
-                                    </span>
-                    </span>
+                    <i class="far fa-user"></i>
+                    <a class="text-decoration-none text-muted"
+                       th:if="${authorProfile.id != null}"
+                       th:href="@{|/profiles/${authorProfile.id}|}">
+                        <span th:text="${authorProfile.username}"></span>
+                    </a>
+                    <span th:if="${authorProfile.id == null}" th:text="${authorProfile.username}"></span>
                     <span>Откликов:</span>
                     <span th:text="${countWishers}"></span>
                 </small>

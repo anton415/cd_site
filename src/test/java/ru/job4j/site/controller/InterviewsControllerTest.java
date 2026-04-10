@@ -112,6 +112,7 @@ public class InterviewsControllerTest {
                 .andDo(print())
                 .andExpectAll(model().attribute("interviewsPage", page),
                         model().attribute("authService", authService),
+                        model().attribute("authors", Map.of(id, profile)),
                         model().attribute("current_page", "interviews"),
                         model().attribute("userInfo", userInfo),
                         model().attribute("breadcrumbs", breadcrumbs),
