@@ -8,11 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.job4j.site.domain.Category;
 import ru.job4j.site.dto.CategoryDTO;
-import ru.job4j.site.dto.TopicIdNameDTO;
+import ru.job4j.site.dto.TopicLiteDTO;
 import ru.job4j.site.util.RestAuthCall;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,23 +69,11 @@ public class CategoriesService {
     }
 
     public List<CategoryDTO> getAllWithTopics() throws JsonProcessingException {
-        var categoriesDTO = getAll();
-        for (var categoryDTO : categoriesDTO) {
-            var listTopicId = getAllWithTopicsCount(categoryDTO);
-            var count = countInterview(listTopicId);
-            categoryDTO.setCountInterview(count);
-        }
-        return categoriesDTO;
+        return setInterviewCount(getAll());
     }
 
     public List<CategoryDTO> getMostPopular() throws JsonProcessingException {
-        var categoriesDTO = getPopularFromDesc();
-        for (var categoryDTO : categoriesDTO) {
-            var listTopicId = getAllWithTopicsCount(categoryDTO);
-            var count = countInterview(listTopicId);
-            categoryDTO.setCountInterview(count);
-        }
-        return categoriesDTO;
+        return setInterviewCount(getPopularFromDesc());
     }
 
     public String getNameById(List<CategoryDTO> list, int id) {
@@ -97,34 +88,33 @@ public class CategoriesService {
     }
 
     /**
-     * Метод находит List TopicId для определенной категории
-     *
-     * @param categoryDTO categoryDTO
-     * @return List TopicId для определенной категории
-     * @throws JsonProcessingException
+     * Метод устанавливает количество собеседований для каждой категории.
+     * @param categoriesDTO List<CategoryDTO> - список категорий, для которых нужно установить количество собеседований.
+     * @return List<CategoryDTO> - список категорий с установленным количеством собеседований.
      */
-    public List<Integer> getAllWithTopicsCount(CategoryDTO categoryDTO) throws JsonProcessingException {
-        return topicsService.getTopicIdNameDtoByCategory(categoryDTO.getId())
-                .stream()
-                .map(TopicIdNameDTO::getId)
-                .collect(Collectors.toList());
+    private List<CategoryDTO> setInterviewCount(List<CategoryDTO> categoriesDTO) {
+        Map<Integer, Long> countByCategoryId = getInterviewCountByCategoryId();
+        for (var categoryDTO : categoriesDTO) {
+            categoryDTO.setCountInterview(countByCategoryId.getOrDefault(categoryDTO.getId(), 0L));
+        }
+        return categoriesDTO;
     }
 
     /**
-     * Метод находит количество интервью для List TopicId
-     *
-     * @param intListTopic intListTopic
-     * @return количество интервью для List TopicId
+     * Метод получает количество собеседований для каждой категории.
+     * @return Map<Integer, Long> - карта, где ключ - ID категории, а значение - количество собеседований для этой категории.
      */
-    public Long countInterview(List<Integer> intListTopic) {
-        var listInterview = interviewsService.getNewInterviews();
-        long countInt = 0L;
-        for (var interview : listInterview) {
-            if (intListTopic.contains(interview.getTopicId())) {
-                countInt++;
-            }
-        }
-        return countInt;
+    private Map<Integer, Long> getInterviewCountByCategoryId() {
+        Map<Integer, Integer> topicIdToCategoryId = topicsService.getAllTopicLiteDTO().stream()
+                .collect(Collectors.toMap(
+                        TopicLiteDTO::getId,
+                        TopicLiteDTO::getCategoryId,
+                        (existing, ignored) -> existing
+                ));
+        return interviewsService.getNewInterviews().stream()
+                .map(interview -> topicIdToCategoryId.get(interview.getTopicId()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
     /**

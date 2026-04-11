@@ -1,5 +1,6 @@
 package ru.job4j.site.controller;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -77,20 +78,19 @@ class IndexControllerTest {
     }
 
     @Test
+    @DisplayName("Проверяем, что при запросе страницы в модель добавляются все необходимые атрибуты и возвращается правильное имя представления.")
     void whenGetIndexPageExpectModelAttributeThenOk() throws Exception {
         var token = "1410";
-        var topicDTO1 = new TopicDTO();
         var profile1 = new ProfileDTO(1, "username1", "experience", 1,
                 Calendar.getInstance(), Calendar.getInstance());
         var profile2 = new ProfileDTO(2, "username2", "experience", 2,
                 Calendar.getInstance(), Calendar.getInstance());
-        topicDTO1.setId(1);
-        topicDTO1.setName("topic1");
-        var topicDTO2 = new TopicDTO();
-        topicDTO2.setId(2);
-        topicDTO2.setName("topic2");
         var cat1 = new CategoryDTO(1, "name1");
+        // Устанавливаем количество собеседований для первой категории
+        cat1.setCountInterview(2L);
         var cat2 = new CategoryDTO(2, "name2");
+        // Устанавливаем количество собеседований для второй категории
+        cat2.setCountInterview(1L);
         var listCat = List.of(cat1, cat2);
         var firstInterview = new InterviewDTO(1, 1, 1, "status1", 1, 1,
                 "interview1", "description1", "contact1",
@@ -105,8 +105,6 @@ class IndexControllerTest {
                 new VacancyStatisticWithDates.Dates(
                         LocalDateTime.of(2024, 4, 22, 12, 0),
                         LocalDateTime.of(2024, 4, 23, 12, 0)));
-        when(topicsService.getByCategory(cat1.getId())).thenReturn(List.of(topicDTO1));
-        when(topicsService.getByCategory(cat2.getId())).thenReturn(List.of(topicDTO2));
         when(topicsService.getAllTopicLiteDTO()).thenReturn(Collections.emptyList());
         when(categoriesService.getMostPopular()).thenReturn(listCat);
         when(interviewsService.getLast()).thenReturn(listInterviews);
