@@ -15,6 +15,7 @@ import ru.job4j.site.SiteSrv;
 import ru.job4j.site.domain.Breadcrumb;
 import ru.job4j.site.dto.*;
 import ru.job4j.site.enums.StatusInterview;
+import ru.job4j.site.exception.RemoteResourceNotFoundException;
 import ru.job4j.site.service.*;
 import ru.job4j.site.service.EurekaUriProvider;
 
@@ -102,6 +103,18 @@ public class InterviewControllerTest {
                 .andExpect(model().attribute("authorProfile", profileDTO))
                 .andExpect(model().attribute("feedbackMap", Collections.emptyMap()))
                 .andExpect(view().name("interview/details"));
+    }
+
+    @Test
+    public void whenShowDetailsAndInterviewMissingThenRedirectStartPage() throws Exception {
+        var token = "1410";
+        when(interviewService.getById(token, 1))
+                .thenThrow(new RemoteResourceNotFoundException("not found", "http://service"));
+
+        mockMvc.perform(get("/interview/{id}", 1).sessionAttr("token", token))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/"));
     }
 
     @Test

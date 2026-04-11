@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.job4j.site.domain.Category;
 import ru.job4j.site.dto.CategoryDTO;
 import ru.job4j.site.dto.TopicLiteDTO;
+import ru.job4j.site.exception.RemoteResourceNotFoundException;
 import ru.job4j.site.util.RestAuthCall;
 
 import java.util.Map;
@@ -132,8 +133,8 @@ public class CategoriesService {
             var mapper = new ObjectMapper();
             result = Optional.of(mapper.readValue(text, new TypeReference<>() {
             }));
-        } catch (Exception e) {
-            log.error("API category service not found, error:{}", e.getMessage());
+        } catch (RemoteResourceNotFoundException e) {
+            log.warn("Category with id={} not found. {}", categoryId, e.getMessage());
         }
         return result;
     }

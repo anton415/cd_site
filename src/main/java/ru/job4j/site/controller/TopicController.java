@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.job4j.site.dto.TopicDTO;
 import ru.job4j.site.dto.TopicLiteDTO;
+import ru.job4j.site.exception.RemoteServiceException;
 import ru.job4j.site.service.AuthService;
 import ru.job4j.site.service.NotificationService;
 import ru.job4j.site.service.TopicsService;
@@ -32,7 +33,13 @@ public class TopicController {
     public String details(@PathVariable int topicId,
                           Model model,
                           HttpServletRequest req) throws JsonProcessingException {
-        var topic = topicsService.getById(topicId);
+        TopicDTO topic;
+        try {
+            topic = topicsService.getById(topicId);
+        } catch (JsonProcessingException | RemoteServiceException e) {
+            log.error("Topic details are unavailable. {}", e.getMessage());
+            return "redirect:/categories/";
+        }
         topic.setName(StringEscapeUtils.unescapeHtml4(topic.getName()));
         topic.setText(StringEscapeUtils.unescapeHtml4(topic.getText()));
         String categoryName = topic.getCategory().getName();
@@ -103,7 +110,12 @@ public class TopicController {
         var token = getToken(req);
         if (token != null) {
             var userInfo = authService.userInfo(token);
-            topic = topicsService.getById(topicId);
+            try {
+                topic = topicsService.getById(topicId);
+            } catch (JsonProcessingException | RemoteServiceException e) {
+                log.error("Topic update form is unavailable. {}", e.getMessage());
+                return "redirect:/categories/";
+            }
             topic.setName(StringEscapeUtils.unescapeHtml4(topic.getName()));
             topic.setText(StringEscapeUtils.unescapeHtml4(topic.getText()));
             RequestResponseTools.addAttrCanManage(model, userInfo);
