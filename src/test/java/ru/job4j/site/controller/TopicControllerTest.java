@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.job4j.site.SiteSrv;
 import ru.job4j.site.domain.Breadcrumb;
 import ru.job4j.site.dto.*;
+import ru.job4j.site.exception.RemoteResourceNotFoundException;
 import ru.job4j.site.service.AuthService;
 import ru.job4j.site.service.NotificationService;
 import ru.job4j.site.service.TopicsService;
@@ -77,6 +78,15 @@ public class TopicControllerTest {
                         new Breadcrumb("Категории", "/categories/"),
                         new Breadcrumb("Some category", "/topics/1"),
                         new Breadcrumb("Some topic", "/topic/1"))));
+    }
+
+    @Test
+    public void whenShowDetailsAndTopicMissingThenRedirectCategories() throws Exception {
+        when(topicsService.getById(1)).thenThrow(new RemoteResourceNotFoundException("not found", "http://service"));
+        mockMvc.perform(get("/topic/1"))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/categories/"));
     }
 
     @Test

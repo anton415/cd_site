@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.job4j.site.dto.*;
+import ru.job4j.site.exception.RemoteResourceNotFoundException;
 import ru.job4j.site.util.RestAuthCall;
 
 import java.util.*;
@@ -138,8 +139,8 @@ public class TopicsService {
             TopicLiteDTO topicLiteDto = mapper.readValue(text, new TypeReference<>() {
             });
             result = Optional.of(topicLiteDto);
-        } catch (Exception e) {
-            log.error("Request to API DESC error: {}", e.getMessage());
+        } catch (RemoteResourceNotFoundException e) {
+            log.warn("TopicLiteDTO with id={} not found. {}", topicId, e.getMessage());
         }
         return result;
     }

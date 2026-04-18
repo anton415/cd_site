@@ -10,6 +10,7 @@ import ru.job4j.site.domain.Breadcrumb;
 import ru.job4j.site.dto.FeedbackDTO;
 import ru.job4j.site.dto.FeedbackNotificationDTO;
 import ru.job4j.site.dto.InterviewDTO;
+import ru.job4j.site.exception.RemoteResourceNotFoundException;
 import ru.job4j.site.service.FeedbackService;
 import ru.job4j.site.service.InterviewService;
 import ru.job4j.site.service.NotificationService;
@@ -78,7 +79,8 @@ class FeedbackControllerTest {
     void whenGetFeedbackFormOfInterviewGetExceptionThenRedirectStartPage() throws Exception {
         var interviewId = 1;
         var token = "1234";
-        when(interviewService.getById(token, interviewId)).thenThrow(new RuntimeException("error"));
+        when(interviewService.getById(token, interviewId))
+                .thenThrow(new RemoteResourceNotFoundException("error", "http://service"));
         this.mockMvc.perform(get("/interview/feedback/{id}", interviewId)
                         .sessionAttr("token", token))
                 .andDo(print())

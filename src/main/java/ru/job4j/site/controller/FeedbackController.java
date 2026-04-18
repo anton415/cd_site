@@ -1,5 +1,6 @@
 package ru.job4j.site.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
@@ -10,6 +11,7 @@ import ru.job4j.site.dto.FeedbackDTO;
 import ru.job4j.site.dto.FeedbackNotificationDTO;
 import ru.job4j.site.dto.InterviewDTO;
 import ru.job4j.site.dto.ProfileDTO;
+import ru.job4j.site.exception.RemoteServiceException;
 import ru.job4j.site.service.FeedbackService;
 import ru.job4j.site.service.InterviewService;
 import ru.job4j.site.service.NotificationService;
@@ -51,7 +53,7 @@ public class FeedbackController {
         var interviewDTO = new InterviewDTO();
         try {
             interviewDTO = interviewService.getById(token, id);
-        } catch (Exception e) {
+        } catch (JsonProcessingException | RemoteServiceException e) {
             log.error("InterviewService.class method getById error: {}", e.getMessage());
             return "redirect:/";
         }

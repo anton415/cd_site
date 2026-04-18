@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.job4j.site.domain.VacancyURL;
 import ru.job4j.site.dto.*;
 import ru.job4j.site.enums.StatusInterview;
+import ru.job4j.site.exception.RemoteServiceException;
 import ru.job4j.site.service.*;
 import ru.job4j.site.util.RequestResponseTools;
 
@@ -267,7 +268,7 @@ public class InterviewController {
         var interviewDTO = new InterviewDTO();
         try {
             interviewDTO = interviewService.getById(token, interviewId);
-        } catch (Exception e) {
+        } catch (JsonProcessingException | RemoteServiceException e) {
             log.error("InterviewService.class method getById error: {}", e.getMessage());
             return "redirect:/";
         }
@@ -307,7 +308,7 @@ public class InterviewController {
             if (interview.getSubmitterId() != userInfoDTO.getId()) {
                 return "redirect:/interview/" + interviewId;
             }
-        } catch (Exception e) {
+        } catch (JsonProcessingException | RemoteServiceException e) {
             log.error("Remote application not responding. Error: {}. {}, ", e.getCause(), e.getMessage());
             return "redirect:/interviews/";
         }

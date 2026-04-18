@@ -7,12 +7,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import ru.job4j.site.exception.RemoteServiceException;
 
-import java.io.IOException;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -21,106 +20,129 @@ public class RestAuthCall {
     private final String url;
 
     public String get() {
-        var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return restTemplate.exchange(url, HttpMethod.GET,
-                new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
-                }
-        ).getBody();
+        return execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            return restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
+                    }
+            ).getBody();
+        });
     }
 
     public String get(String token) {
-        var restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(
-                new DefaultResponseErrorHandler() {
-                    @Override
-                    public void handleError(ClientHttpResponse response) throws IOException {
-                        var respValue = response.getStatusCode().value();
-                        if (respValue != 401 && respValue != 404) {
-                            log.error("Call: " + url, response.getStatusText());
-                        }
+        return execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.set("Authorization", "Bearer " + token);
+            return restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
                     }
-                }
-        );
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "Bearer " + token);
-        return restTemplate.exchange(url, HttpMethod.GET,
-                new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
-                }
-        ).getBody();
+            ).getBody();
+        });
     }
 
     public String getWithHeaders(HttpHeaders headers) {
-        var restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(
-                new DefaultResponseErrorHandler() {
-                    @Override
-                    public void handleError(ClientHttpResponse response) throws IOException {
-                        var respValue = response.getStatusCode().value();
-                        if (respValue != 401 && respValue != 404) {
-                            log.error("Call: " + url, response.getStatusText());
-                        }
+        return execute(() -> {
+            var restTemplate = restTemplate();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            return restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
                     }
-                }
-        );
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return restTemplate.exchange(url, HttpMethod.GET,
-                new HttpEntity<>(headers), new ParameterizedTypeReference<String>() {
-                }
-        ).getBody();
+            ).getBody();
+        });
     }
 
     public String token(Map<String, String> params) {
-        var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "Basic am9iNGo6cGFzc3dvcmQ=");
-        var map = new LinkedMultiValueMap<String, String>();
-        params.forEach(map::add);
-        map.add("scope", "any");
-        map.add("grant_type", "password");
-        return restTemplate.postForEntity(
-                url, new HttpEntity<>(map, headers), String.class
-        ).getBody();
+        return execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.set("Authorization", "Basic am9iNGo6cGFzc3dvcmQ=");
+            var map = new LinkedMultiValueMap<String, String>();
+            params.forEach(map::add);
+            map.add("scope", "any");
+            map.add("grant_type", "password");
+            return restTemplate.postForEntity(
+                    url, new HttpEntity<>(map, headers), String.class
+            ).getBody();
+        });
     }
 
     public String post(String token, String json) {
-        var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + token);
-        return restTemplate.postForEntity(
-                url, new HttpEntity<>(json, headers), String.class
-        ).getBody();
+        return execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + token);
+            return restTemplate.postForEntity(
+                    url, new HttpEntity<>(json, headers), String.class
+            ).getBody();
+        });
     }
 
     public void update(String token, String json) {
-        var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + token);
-        var request = new HttpEntity<>(json, headers);
-        restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + token);
+            var request = new HttpEntity<>(json, headers);
+            restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+            return null;
+        });
     }
 
     public void delete(String token, String json) {
-        var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + token);
-        var request = new HttpEntity<>(json, headers);
-        restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + token);
+            var request = new HttpEntity<>(json, headers);
+            restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+            return null;
+        });
     }
 
     public void put(String token, String json) {
+        execute(() -> {
+            var restTemplate = restTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + token);
+            restTemplate.put(
+                    url, new HttpEntity<>(json, headers), String.class
+            );
+            return null;
+        });
+    }
+
+    private RestTemplate restTemplate() {
         var restTemplate = new RestTemplate();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + token);
-        restTemplate.put(
-                url, new HttpEntity<>(json, headers), String.class
-        );
+        restTemplate.setErrorHandler(new RestTemplateResponseErrorHandler(url));
+        return restTemplate;
+    }
+
+    private <T> T execute(RestOperation<T> operation) {
+        try {
+            return operation.execute();
+        } catch (RemoteServiceException e) {
+            throw e;
+        } catch (RestClientException e) {
+            throw new RemoteServiceException(
+                    String.format("Remote call to %s failed: %s", url, e.getMessage()),
+                    url,
+                    -1,
+                    e
+            );
+        }
+    }
+
+    @FunctionalInterface
+    private interface RestOperation<T> {
+        T execute();
     }
 }
