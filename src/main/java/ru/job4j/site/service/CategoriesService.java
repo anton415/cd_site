@@ -135,6 +135,8 @@ public class CategoriesService {
             }));
         } catch (RemoteResourceNotFoundException e) {
             log.warn("Category with id={} not found. {}", categoryId, e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse Category with id={}. {}", categoryId, e.getMessage());
         }
         return result;
     }

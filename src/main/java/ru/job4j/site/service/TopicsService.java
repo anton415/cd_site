@@ -141,6 +141,8 @@ public class TopicsService {
             result = Optional.of(topicLiteDto);
         } catch (RemoteResourceNotFoundException e) {
             log.warn("TopicLiteDTO with id={} not found. {}", topicId, e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse TopicLiteDTO with id={}. {}", topicId, e.getMessage());
         }
         return result;
     }
